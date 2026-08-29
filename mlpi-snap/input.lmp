@@ -1,0 +1,33 @@
+# LAMMPS Input File
+# Licensed under CC BY 4.0
+# See more in "A Set of Materials-Science Tutorials for the LAMMPS Simulation Package: 2. Materials Science"
+# By Simon Gravelle, Mark A. Tschopp, Jacob R. Gissinger, and Axel Kohlmeyer
+
+variable swap equal 100 # momentum swap every 100 steps (0.1 ps)
+variable a0 equal 5.760
+
+# 1) Initialization
+units metal
+atom_style atomic
+boundary p p p
+
+# 2) System definition
+lattice diamond 5.760
+region box block 0 4 0 4 0 4
+create_box 1 box
+create_atoms 1 box
+mass 1 72.63
+
+# 3) Settings
+pair_style snap
+pair_coeff * * Ge_Zuo_JPCA2020.snapcoeff Ge_Zuo_JPCA2020.snapparam Ge
+
+# 4) Monitoring
+thermo 100
+dump traj all atom 100 dump.lammpstrj
+
+# 5) Run
+timestep 0.001 # 1 fs
+velocity all create 300.0 49284 mom yes rot yes dist gaussian
+fix mynpt all npt temp 300 300 0.1 aniso 0 0 1.0 
+run 5000

@@ -1,0 +1,32 @@
+# LAMMPS Input File
+# Licensed under CC BY 4.0
+# See more in "A Set of Materials-Science Tutorials for the LAMMPS Simulation Package: 2. Materials Science"
+# By Simon Gravelle, Mark A. Tschopp, Jacob R. Gissinger, and Axel Kohlmeyer
+
+# 1) Initialization
+units metal
+dimension 3
+boundary p p p
+atom_style atomic
+
+# 2) System definition
+lattice fcc 4.049 origin 0.25 0.25 0.25
+region box block 0 4 0 4 0 4 units lattice
+create_box 1 box
+create_atoms 1 box
+
+# 3) Settings
+pair_style eam/alloy
+pair_coeff * * Al_zhou.eam.alloy Al
+
+# 4) Monitoring
+thermo 100
+dump viz all image 100 myimage-*.ppm type type shiny 0.1 box no 0.01 view 0 0 zoom 1.8 fsaa yes size 800 800
+dump_modify viz adiam 1 1 acolor 1 turquoise backcolor white
+dump traj all atom 100 dump.lammpstrj
+
+# 5) Run
+timestep 0.001 # 1 fs
+velocity all create 300.0 49284 mom yes rot yes dist gaussian
+fix mynpt all npt temp 300 300 0.1 aniso 0 0 1.0 
+run 5000
