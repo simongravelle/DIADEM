@@ -15,3 +15,7 @@ Alternatively, LAMMPS-GUI can also be downloaded from these links:
   for Linux (tarball, preferred option)
 - [LAMMPS-GUI (.flatpak)](https://github.com/akohlmey/lammps-gui/releases/download/v3.0.7/LAMMPS-GUI-Linux-x86_64-v3.0.7.flatpak)
   for Linux ([flatpak](https://flatpak.org/))
+
+## Problem with opening LAMMPS-GUI ?
+
+See [this page](https://lammps-gui.lammps.org/installation.html)
