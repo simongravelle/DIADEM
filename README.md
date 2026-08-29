@@ -2,7 +2,7 @@
 
 ## First input
 
-The first input can be downloaded from [here](argon-lj/NVE/input.lmp).
+The first input can be downloaded from [argon-lj/NVE/](argon-lj/NVE/input.lmp).
 
 ## Download LAMMPS-GUI
 
