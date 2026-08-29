@@ -5,10 +5,11 @@ dimension       3 # Perform the simulation in 3 spatial dimensions
 atom_style      atomic # Atoms are treated as point particles without bonds or molecular topology
 boundary        p p p # Use periodic boundary conditions
 
-lattice         fcc 1.59 # Define a fcc latice
-region          simbox block -20 20 -20 20 -20 20 # Define the simulation box from -20 to 20 in x, y, and z
+lattice         fcc 1 origin 0.25 0.25 0.25 # Define a fcc lattice
+region          simbox block -4 4 -4 4 -4 4 # Define the simulation box from -20 to 20 in x, y, and z
 create_box      1 simbox # Create a simulation box containing one atom type
-create_atoms    1 simbox # Create N atoms inside the simulation box
+create_atoms    1 box # Create N atoms inside the simulation box
+lattice         none 1
 
 mass            1    1.0 # Assign a mass to atom type 1 (mass = 1.0)
 pair_style      lj/cut 4.0 # Use a Lennard-Jones pair potential with a cutoff distance of 4.0
