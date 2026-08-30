@@ -4,10 +4,10 @@
 # By Simon Gravelle, Mark A. Tschopp, Jacob R. Gissinger, and Axel Kohlmeyer
 
 # 1) Initialization
-units metal
-dimension 3
-boundary p p p
-atom_style atomic
+units           metal # Use metal units (distance in Å, time in ps, and energy in eV)
+dimension       3 # three spatial dimensions
+boundary        p p p # Apply periodic boundary conditions
+atom_style      atomic # Treat atoms as simple particles without charge or molecular topology
 
 # 2) System definition
 lattice fcc 4.049 origin 0.25 0.25 0.25
