@@ -4,22 +4,16 @@
 # By Simon Gravelle, Mark A. Tschopp, Jacob R. Gissinger, and Axel Kohlmeyer
 
 # 1) Initialization
-variable pot  index tersoff        # comb | tersoff | vashishta
-variable mode index bulk        # bulk | surface
-units metal
-dimension 3
-atom_style charge
-boundary p p p
+units metal # Use metal units (distance in Å, time in ps, energy in eV)
+dimension 3 # Perform the simulation in three spatial dimensions
+atom_style charge # Atom can have charge + the basic properties
+boundary p p p # Apply periodic boundary conditions in all directions
 
 # 2) System definition
-variable qa equal 5.0820
-variable qc equal 5.5277
-variable eb equal -6.6979
-
-# in bulk mode, start from the experimental cell instead and let it relax
-variable qa equal 4.916
-variable qc equal 5.4054
-variable qb equal ${qa}*0.8660254
+# start from the experimental cell instead and let it relax
+variable qa equal 4.916 # Define the experimental lattice parameter a
+variable qc equal 5.4054 # Define the experimental lattice parameter c
+variable qb equal ${qa}*0.8660254 # Calculate the y-component of the hexagonal lattice vector
 lattice custom 1.0 &
     a1 ${qa} 0.0 0.0  a2 $(-0.5*v_qa) $(v_qb) 0.0  a3 0.0 0.0 ${qc} &
     basis 0.469700 0.000000 0.000000 &
@@ -31,33 +25,35 @@ lattice custom 1.0 &
     basis 0.586500 0.853400 0.214233 &
     basis 0.853400 0.586500 0.452433 &
     basis 0.146600 0.733100 0.880900 &
-    origin 0.0 0.0 0.05
-region box block 0 $(2*v_qa) 0 $(2*v_qb) 0 $(2*v_qc) units box
-create_box 2 box
+    origin 0.0 0.0 0.05 # Shift the lattice origin in the z-direction
+region box block 0 $(2*v_qa) 0 $(2*v_qb) 0 $(2*v_qc) units box # Define the simulation box dimensions
+create_box 2 box # Create a simulation box with two atom types
 create_atoms 1 box basis 1 1 basis 2 1 basis 3 1 &
-    basis 4 2 basis 5 2 basis 6 2 basis 7 2 basis 8 2 basis 9 2
+    basis 4 2 basis 5 2 basis 6 2 basis 7 2 basis 8 2 basis 9 2 #  # Create Si atoms at basis sites 1, 2, and 3 and create O atoms at basis sites 4 through 9
 
 replicate 2 2 2
 
-mass 1 28.0855
-mass 2 15.999
+mass 1 28.0855 # Assign the atomic mass of silicon to atom type 1
+mass 2 15.999 # Assign the atomic mass of oxygen to atom type 2
 
 # 3) Settings
-pair_style tersoff
-pair_coeff * * SiO.tersoff Si O
-neighbor 0.5 bin
+pair_style tersoff # Use the Tersoff potential to describe interatomic interactions
+pair_coeff * * SiO.tersoff Si O # Assign the Si/O Tersoff potential parameters to the atom types
+neighbor 0.5 bin # Set the neighbor-list skin distance to 0.5 Å using binning
 
 # 4) Monitoring
-group si type 1
-group ox type 2
-compute qsi si property/atom q
-compute qavsi si reduce ave c_qsi
-thermo 100
-thermo_style custom step pe press lx lz c_qavsi
-dump traj all atom 100 dump.lammpstrj
+group si type 1 # Create a group containing all silicon atoms
+group ox type 2 # Create a group containing all oxygen atoms
+compute qsi si property/atom q # Compute the charge of each silicon atom
+compute qavsi si reduce ave c_qsi # Calculate the average charge of all silicon atoms
+thermo 100 # Output thermodynamic information every 100 timesteps
+thermo_style custom step pe press lx lz c_qavsi # Output timestep, potential energy, pressure, box lengths, and average Si charge
+dump traj all atom 100 dump.lammpstrj # Write atomic positions and types to a trajectory file every 100 timesteps
+
 
 # 5) Run
-timestep 0.001 # 1 fs
-velocity all create 300.0 49284 mom yes rot yes dist gaussian
-fix mynpt all npt temp 300 300 0.1 aniso 0 0 1.0 
-run 5000
+timestep 0.001 # Set the timestep to 0.001 ps, equivalent to 1 fs
+velocity all create 300.0 49284 mom yes rot yes dist gaussian # Assign velocities corresponding to 300 K with zero net momentum and Gaussian distribution
+fix mynpt all npt temp 300 300 0.1 aniso 0 0 1.0 # Run NPT dynamics at 300 K and allow anisotropic box relaxation at zero pressure
+run 5000 # Run the simulation for 5000 timesteps
+
