@@ -50,6 +50,8 @@ thermo 100 # Output thermodynamic information every 100 timesteps
 thermo_style custom step pe press lx lz c_qavsi # Output timestep, potential energy, pressure, box lengths, and average Si charge
 dump traj all atom 100 dump.lammpstrj # Write atomic positions and types to a trajectory file every 100 timesteps
 
+dump viz all image 100 myimage-*.ppm type type shiny 0.1 box no 0.01 view 180 90 zoom 2 size 600 500
+dump_modify viz adiam 1 2.6 adiam 2 2.3 backcolor white acolor 1 yellow acolor 2 red
 
 # 5) Run
 timestep 0.001 # Set the timestep to 0.001 ps, equivalent to 1 fs
