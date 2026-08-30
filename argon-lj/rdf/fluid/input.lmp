@@ -29,8 +29,8 @@ dump_modify     viz pad 9 boxcolor white backcolor black adiam 1 2 acolor 1 cyan
 
 run             25000 # First run to equilibrate the system 
 
-compute         myRDF    all      rdf 500
-fix             myAT        all      ave/time 10 2500 25000 c_myRDF[*] file rdf.dat mode vector
+compute         myRDF    all      rdf 500 # Compute the radial distribution function (RDF), g(r), using 500 bins
+fix             myAT        all      ave/time 10 2500 25000 c_myRDF[*] file rdf.dat mode vector # Sample RDF every 10 steps, average 2500 samples over 25000 steps, and write the averaged RDF data to rdf.dat
 
 run             25000 # Second run to produce 
 
