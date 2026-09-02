@@ -1,34 +1,61 @@
 # LAMMPS Input File
 # Licensed under CC BY 4.0
-# See more in "A Set of Materials-Science Tutorials for the LAMMPS Simulation Package: 2. Materials Science"
-# By Simon Gravelle, Mark A. Tschopp, Jacob R. Gissinger, and Axel Kohlmeyer
+# Modernized recreation of the MSU/CAVS tutorials by Mark A. Tschopp
+# Taken from Tutorial 5: uniaxial deformation of single-crystal aluminum
+# A Set of Materials-Science Tutorials for the LAMMPS Simulation Package
 
 # 1) Initialization
-units           metal # Use metal units (distance in Å, time in ps, and energy in eV)
-dimension       3 # three spatial dimensions
-boundary        p p p # Apply periodic boundary conditions
-atom_style      atomic # Treat atoms as simple particles without charge or molecular topology
+units metal
+dimension 3
+boundary p p p
+atom_style atomic
 
-# 2) System definition
-
-lattice         fcc 4.049 origin 0.25 0.25 0.25 # Define an FCC lattice with lattice constant 4.049 Å and shift the lattice origin
-region          box block 0 4 0 4 0 4 units lattice # Define a simulation box of 4 × 4 × 4 lattice units
-create_box      1 box # Create the simulation box with one atom type
-create_atoms    1 box # Fill the simulation box with atoms of type 1
+# 2) System definition: <100>-oriented fcc Al
+variable a0 equal 4.049
+lattice fcc ${a0} orient x 1 0 0 orient y 0 1 0 orient z 0 0 1 origin 0.25 0.25 0.25
+region box block 0 5 0 5 0 5
+create_box 1 box
+create_atoms 1 box
 
 # 3) Settings
-pair_style      eam/alloy # Use the Embedded Atom Method (EAM) alloy potential
-pair_coeff      *    *    Al_zhou.eam.alloy Al # Assign the aluminum EAM potential to atom type 1
+pair_style eam/alloy
+pair_coeff * * Al_zhou.eam.alloy Al
 
+compute csym all centro/atom fcc
+compute pea  all pe/atom
 
-# 4) Monitoring
-thermo          100 # Output thermodynamic information every 100 timesteps
+# Image generation
 dump            viz      all      image 100 myimage-*.ppm type type shiny 0.1 box no 0.01 view 0 0 zoom 1.8 fsaa yes size 800 800
 dump_modify     viz adiam 1 1 acolor 1 turquoise backcolor white
-# dump            traj     all      atom 100 dump.lammpstrj
 
-# 5) Run
-timestep 0.001 # # Set the timestep to 0.001 ps
-velocity        all create 300.0 49284 mom yes rot yes dist gaussian # Assign initial velocities
-fix             mynpt    all      npt temp 300 300 0.1 aniso 0 0 1.0 # Run NPT dynamics at 300 K while allowing anisotropic box relaxation at zero pressure
-run             5000 # Run the simulation for 5000 timesteps
+# 4) Equilibration at the target temperature and zero pressure (isotropic NPT)
+timestep 0.001
+velocity all create 300.0 12345 mom yes rot no
+fix equi all npt temp 300.0 300.0 0.1 iso 0.0 0.0 1.0
+thermo 1000
+thermo_style custom step temp pe lx ly lz press
+ run 20000
+unfix equi
+
+# reference length for the engineering strain
+variable lx0 equal $(lx)
+reset_timestep 0
+
+# 5) Uniaxial deformation along x at constant engineering strain rate
+#    +0.01/ps (tension) or -0.01/ps (compression); lateral sides at 0 bar
+fix integrate all npt temp 300 300 0.1 y 0.0 0.0 1.0 z 0.0 0.0 1.0
+fix shape all deform 1 x erate 0.01 units box remap x
+
+# stress-strain output (engineering strain; stress in GPa = -pressure/10000)
+variable strain equal (lx-v_lx0)/v_lx0
+variable sxx equal -pxx/10000.0
+variable syy equal -pyy/10000.0
+variable szz equal -pzz/10000.0
+fix out all print 100 "$(v_strain:%.5f),$(v_sxx:%.5f),$(v_syy:%.5f),$(v_szz:%.5f)" file stress-strain.csv title "strain,sxx_GPa,syy_GPa,szz_GPa" screen no
+
+# trajectory for LAMMPS-GUI/OVITO, with per-atom centrosymmetry for coloring;
+# turn it into the dislocation figure with solution/visualize.lmp
+dump traj all custom 1000 deform.lammpstrj id type xs ys zs c_csym c_pea
+
+thermo_style custom step v_strain temp v_sxx v_syy v_szz pe press
+run 20000
