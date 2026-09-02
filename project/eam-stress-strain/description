@@ -1,0 +1,5 @@
+This exercise investigates the melting of an initially perfect FCC aluminum crystal using molecular dynamics.
+A thin central region is heated to create a liquid-like region while the surrounding material remains cold and crystalline.
+The temperature controls are then removed and the system is heated to form liquid aluminum.
+The centrosymmetry parameter is used to visualize the transition between ordered solid and disordered liquid environments.
+The final configuration can serve as a starting point for studying solid–liquid coexistence and interface propagation.
