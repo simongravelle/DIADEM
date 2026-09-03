@@ -1,0 +1,38 @@
+# LAMMPS Input File
+# Licensed under CC BY 4.0
+
+# Initialization
+units           metal # Use metal units: distance in Å, time in ps, energy in eV, and temperature in K
+dimension       3 # Perform the simulation in three spatial dimensions
+boundary        p p p # Apply periodic boundary conditions in x, y, and z directions
+atom_style      atomic # Treat atoms as simple particles without charge or molecular topology
+
+# System definition: create an elongated fcc solid
+lattice         fcc 4.049 origin 0.25 0.25 0.25 # Define an FCC aluminum lattice with lattice constant 4.049 Å and shifted origin
+region          box block 0 5 0 5 0 5 # Define the simulation box as 5 × 5 × 5 lattice units
+create_box      1 box # Create the simulation box with one atom type
+create_atoms    1 box # Fill the simulation box with atoms of type 1
+lattice         none 1 # Remove the lattice definition and use a unit lattice spacing for subsequent commands
+
+# Settings
+pair_style      eam/alloy # Use the Embedded Atom Method alloy potential for atomic interactions
+pair_coeff      *    *   Al-2009.eam.alloy Al # Assign the aluminum EAM potential file to atom type 1
+
+# Image generation with per-atom centrosymmetry for coloring
+compute         csym all centro/atom fcc # Calculate the centrosymmetry parameter to identify defects and non-FCC local environments
+dump            viz      all      image 100 myimage-*.ppm c_csym type shiny 0.1 box no 0.01 view 0 0 zoom 1.5 fsaa yes size 500 500
+dump_modify     viz adiam 1 1 acolor 1 turquoise backcolor white
+
+# trajectory for LAMMPS-GUI/OVITO, with per-atom centrosymmetry for coloring
+# dump            traj     all      custom 100 dump.lammpstrj id type xs ys zs c_csym
+
+thermo          100 # Output thermodynamic information every 100 timesteps
+
+# Equilibration at the target temperature
+timestep        0.001 # Set the timestep to 0.001 ps, equivalent to 1 fs
+velocity        all create 10.0 786233 mom yes rot no # Assign initial velocities corresponding to 10 K and remove net linear momentum
+fix             mynve    all      nve # Integrate the equations of motion using the constant-energy NVE ensemble
+fix             myber1    all      temp/berendsen 10.0 10.0 0.1 # Maintain the temperature at 10 K with damping 0.1 ps
+
+run             20000 # Run the equilibration simulation for 20000 timesteps
+
