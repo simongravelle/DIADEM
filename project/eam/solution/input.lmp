@@ -1,0 +1,61 @@
+# LAMMPS Input File
+# Licensed under CC BY 4.0
+# Modernized recreation of the MSU/CAVS tutorials by Mark A. Tschopp
+# Taken from Tutorial 5: uniaxial deformation of single-crystal aluminum
+# A Set of Materials-Science Tutorials for the LAMMPS Simulation Package
+
+# Initialization
+units           metal # Use metal units: distance in Å, time in ps, energy in eV, and temperature in K
+dimension       3 # Perform the simulation in three spatial dimensions
+boundary        p p p # Apply periodic boundary conditions in x, y, and z directions
+atom_style      atomic # Treat atoms as simple particles without charge or molecular topology
+
+# System definition: create an elongated fcc solid
+lattice         fcc 4.049 origin 0.25 0.25 0.25 # Define an FCC aluminum lattice with lattice constant 4.049 Å and shifted origin
+region          box block 0 5 0 20 0 5 # Define the simulation box as 5 × 20 × 5 lattice units
+region          warm_region block 0 5 9 11 0 5 # Define a thin region for hot thermostat
+region          cold_region block 0 5 1 19 0 5 side out # Define a thin region for cold thermostat
+create_box      1 box # Create the simulation box with one atom type
+create_atoms    1 box # Fill the simulation box with atoms of type 1
+lattice         none 1 # Remove the lattice definition and use a unit lattice spacing for subsequent commands
+
+# Settings
+pair_style      eam/alloy # Use the Embedded Atom Method alloy potential for atomic interactions
+pair_coeff      *    *   Al-2009.eam.alloy Al # Assign the aluminum EAM potential file to atom type 1
+
+# Image generation
+
+compute         csym all centro/atom fcc # Calculate the centrosymmetry parameter to identify defects and non-FCC local environments
+dump            viz      all      image 100 myimage-*.ppm c_csym type shiny 0.1 box no 0.01 view 0 0 zoom 6 fsaa yes size 1000 300
+dump_modify     viz adiam 1 1 acolor 1 turquoise backcolor white
+
+# trajectory for LAMMPS-GUI/OVITO, with per-atom centrosymmetry for coloring;
+# turn it into the dislocation figure with solution/visualize.lmp
+# dump            traj     all      custom 100 dump.lammpstrj id type xs ys zs c_csym
+
+thermo          100 # Output thermodynamic information every 100 timesteps
+
+# Equilibration at the target temperature
+timestep        0.001 # Set the timestep to 0.001 ps, equivalent to 1 fs
+velocity        all create 10.0 786233 mom yes rot no # Assign initial velocities corresponding to 10 K and remove net linear momentum
+fix             mynve    all      nve # Integrate the equations of motion using the constant-energy NVE ensemble
+fix             myber1    all      temp/berendsen 10.0 10.0 0.1 # Maintain the temperature at 10 K with damping 0.1 ps
+
+run             5000 # Run an equilibration step
+unfix           myber1 # Cancel initial thermostat
+
+group           warm_group region warm_region # Place all atoms from region warm_region into a group called warm_group
+group           cold_group region cold_region # Place all atoms from region cold_region into a group called cold_group
+
+fix             myber1    warm_group      temp/berendsen 2000.0 2000.0 0.1 # Define the warm thermostat, applied on warm_group 
+fix             myber2    cold_group      temp/berendsen 10.0 10.0 0.1 # Define the cold thermostat, applied on cold_group
+
+run             20000 # Run long enough to melt the warm part
+
+unfix           myber1 # Cancel warm_group thermostat
+unfix           myber2 # Cancel cold_group thermostat
+
+fix             myber1    all      temp/berendsen 1500.0 1500.0 0.1 # Apply a single thermostat to the ensemble of atoms and observe the crystal grows or shrinks 
+
+run             20000 # Final run
+
