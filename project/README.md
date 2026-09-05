@@ -1,6 +1,6 @@
 # Project: “God made the bulk; the surface was invented by the devil” : Can machine learning handle the interface?
 
-**Reference:** Simon Gravelle
+**Reference:** Simon Gravelle, Irina Piazza
 
 **Quote:** Wolfgang Pauli
 
